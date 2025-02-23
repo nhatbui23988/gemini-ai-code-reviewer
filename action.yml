@@ -1,6 +1,6 @@
-name: "Gemini AI Code Reviewer"
+name: "Gemini AI Code Reviewer clone"
 description: "This GitHub Action automatically reviews PRs using Google's Gemini AI model."
-author: 'truongnh1992'
+author: 'nhatbm2398'
 
 inputs:
   GITHUB_TOKEN:
