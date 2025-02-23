@@ -37,6 +37,7 @@ jobs:
     if: |
       github.event.issue.pull_request &&
       contains(github.event.comment.body, '/gemini-review')
+      
     steps:
       - name: PR Info
         run: |
@@ -58,12 +59,35 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: truongnh1992/gemini-ai-code-reviewer@main
+      - name: Get Changed Files
+        id: changed-files
+        run: |
+          CHANGED_FILES=$(gh pr diff ${{ github.event.issue.number }} --name-only)
+          echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
+          echo "$CHANGED_FILES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: nhatbui23988/gemini-ai-code-reviewer@main
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-1.5-pro-002 # Optional, default is `gemini-1.5-flash-002`
-          EXCLUDE: "*.md,*.txt,package-lock.json,*.yml,*.yaml"
+          GEMINI_MODEL: gemini-1.5-pro-002
+          FILES: ${{ env.CHANGED_FILES }}
+
+      - name: Post Review Comment to PR
+        run: |
+          gh pr comment ${{ github.event.issue.number }} --body "✅ Gemini AI đã review code! Vui lòng kiểm tra phản hồi."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add "AI Reviewed" Label
+        run: |
+          gh pr edit ${{ github.event.issue.number }} --add-label "AI Reviewed"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 ```
 > if you don't set `GEMINI_MODEL`, the default model is `gemini-2.0-flash-001`. `gemini-2.0-flash-001` is a next-generation model offering speed and multimodal generation capabilities.  It's suitable for a wide variety of tasks, including code generation, data extraction, and text editing.. For the detailed information about the models, please refer to [Gemini models](https://ai.google.dev/gemini-api/docs/models/gemini).
 4. Commit codes to your repository, and working on your pull requests.
